@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Cafe</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header>
+    <div class="navbar">
+      <div class="logo">☕ Demo Cafe</div>
+      <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Carousel Section -->
+  <section class="hero-slider fade-in" id="hero">
+    <div class="slide active"><img src="images/coffee.jpg" alt="Coffee"></div>
+    <div class="slide"><img src="images/pastry.jpg" alt="Pastry"></div>
+    <div class="slide"><img src="images/menu.jpg" alt="Cafe Menu"></div>
+    <div class="carousel-dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+    <div class="hero-text">
+      <h1>Welcome to Demo Cafe</h1>
+      <p>Your coffee, your vibe. Experience freshness every day.</p>
+      <a href="#menu" class="btn">See Menu</a>
+      <a href="order.html" class="btn order-btn">Order Online</a>
+    </div>
+  </section>
+
+  <!-- Menu Section -->
+  <section class="section two-column fade-in" id="menu">
+    <div class="text">
+      <h2>Our Menu</h2>
+      <p>From artisan coffee to freshly baked pastries, our menu is crafted to delight your senses.</p>
+    </div>
+    <div class="image">
+      <img src="images/coffee.jpg" alt="Coffee Menu">
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="section services fade-in" id="services">
+    <h2>What We Offer</h2>
+    <div class="cards">
+      <div class="card">
+        <img src="images/coffee.jpg" alt="Coffee brewing">
+        <h3>Fresh Coffee</h3>
+        <p>Experience artisanal brewing in every cup.</p>
+      </div>
+      <div class="card">
+        <img src="images/pastry.jpg" alt="Pastries">
+        <h3>Delicious Pastries</h3>
+        <p>Freshly baked pastries daily.</p>
+      </div>
+      <div class="card">
+        <img src="images/menu.jpg" alt="Online ordering">
+        <h3>Online Orders</h3>
+        <p>Get your favorites delivered straight to your door.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="section two-column fade-in" id="about">
+    <div class="image">
+      <img src="images/coffee.jpg" alt="Cafe interior">
+    </div>
+    <div class="text">
+      <h2>Our Story</h2>
+      <p>At Demo Cafe, we believe in creating the perfect coffee experience. Cozy atmosphere, high-quality beans, and a passion for taste.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <div class="footer-column">
+      <h4>Contact Us</h4>
+      <p>123 Main Street, Your City</p>
+      <p>+60 12-345 6789</p>
+      <p><a href="#">View on Google Maps</a></p>
+    </div>
+    <div class="footer-column">
+      <h4>Opening Hours</h4>
+      <p>Mon – Sun: 8 AM – 10 PM</p>
+    </div>
+    <div class="footer-column">
+      <h4>Follow Us</h4>
+      <p>Instagram | Facebook | TikTok</p>
+    </div>
+  </footer>
+
+  <!-- Floating FAQ Chatbot -->
+  <div id="chat-bubble">💬</div>
+  <div id="faq-chatbot">
+    <div id="chat-header">Demo Chatbot <span id="close-chat">✖</span></div>
+    <div id="chat-body">
+      <div id="messages"></div>
+      <div id="faq-options">
+        <button class="faq-btn">What are your opening hours?</button>
+        <button class="faq-btn">Where is the cafe located?</button>
+        <button class="faq-btn">Do you offer online orders?</button>
+        <button class="faq-btn">Do you have vegan options?</button>
+        <button class="faq-btn">Do you accept reservations?</button>
+      </div>
+      <input type="text" id="user-input" placeholder="Type your question..." />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="chatbot.js"></script>
+  <script>
+    // Hamburger menu
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+
+    // Scroll fade-in
+    const faders = document.querySelectorAll('.fade-in');
+    const appearOptions = { threshold: 0.1 };
+    const appearOnScroll = new IntersectionObserver(function(entries, observer){
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, appearOptions);
+    faders.forEach(fader => appearOnScroll.observe(fader));
+
+    // Hero Carousel
+    const slides = document.querySelectorAll('.hero-slider .slide');
+    const dots = document.querySelectorAll('.carousel-dots .dot');
+    let currentSlide = 0;
+    function showSlide(index){
+      slides.forEach((slide,i)=>{
+        slide.classList.toggle('active',i===index);
+        dots[i].classList.toggle('active',i===index);
+      });
+    }
+    function nextSlide(){
+      currentSlide=(currentSlide+1)%slides.length;
+      showSlide(currentSlide);
+    }
+    dots.forEach((dot,i)=>{
+      dot.addEventListener('click',()=>{currentSlide=i; showSlide(currentSlide);});
+    });
+    setInterval(nextSlide,5000);
+  </script>
+</body>
+</html>

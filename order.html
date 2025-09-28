@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cafe — Order</title>
+  <style>
+    /* ---------- RESET ---------- */
+    * { box-sizing: border-box; margin:0; padding:0; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+    html,body { height:100%; background:#fff; color:#111; }
+
+    /* ---------- CONTAINER & LAYOUT ---------- */
+    .container { max-width:1200px; margin:0 auto; padding:0 20px; }
+    .hero { height:52vh; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; color:#fff; text-align:center; }
+    .hero h1 { font-size:3rem; font-weight:700; margin-bottom:6px; }
+    .hero p { font-size:1.1rem; opacity:0.95; }
+
+    .product-area { display:flex; gap:40px; align-items:flex-start; padding:40px 0; }
+    /* left: image; right: details */
+    .product-left { flex:1 1 520px; display:flex; flex-direction:column; gap:18px; align-items:center; }
+    .product-right { flex: 0 0 420px; }
+
+    /* ---------- CAROUSEL ---------- */
+    .carousel { width:100%; border-radius:16px; overflow:hidden; position:relative; background:#f6f6f6; }
+    .carousel img { width:100%; display:block; height:420px; object-fit:cover; transition:transform .45s ease; }
+    .carousel img.zoom:hover { transform: scale(1.06); cursor:zoom-in; }
+
+    .arrow { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:none; background:rgba(0,0,0,0.35); color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .arrow.left { left:14px; } .arrow.right { right:14px; }
+    .dots { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+    .dot { width:10px; height:10px; background:#d0d0d0; border-radius:50%; cursor:pointer; }
+    .dot.active { background:#222; }
+
+    /* ---------- PRODUCT DETAILS (RIGHT) ---------- */
+    .product-title { font-size:2rem; margin-bottom:8px; font-weight:600; }
+    .product-desc { color:#555; margin-bottom:18px; }
+    .variant-group { display:flex; gap:10px; margin-bottom:16px; }
+    .variant-btn {
+      padding:10px 14px; border-radius:10px; border:1px solid #d0d0d0; background:#fafafa; cursor:pointer; transition:all .18s ease;
+    }
+    .variant-btn.active { background:#0071e3; color:#fff; border-color:rgba(0,113,227,0.9); box-shadow:0 4px 14px rgba(0,113,227,0.12); }
+    .price-row { font-weight:700; font-size:1.25rem; margin-bottom:18px; }
+    .order-btn {
+      display:inline-block; padding:14px 20px; border-radius:14px; background:#0071e3; color:#fff; border:none; font-weight:600; cursor:pointer;
+    }
+    .order-btn:hover { background:#005bb5; }
+
+    /* ---------- RELATED ---------- */
+    .related { padding:36px 0 80px 0; }
+    .related h3 { font-size:1.4rem; margin-bottom:18px; text-align:center; }
+    .related-grid { display:flex; gap:22px; justify-content:center; flex-wrap:wrap; }
+    .related-card { width:190px; border-radius:12px; background:#fff; text-align:center; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,0.05); }
+    .related-card img { width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:10px; }
+    .related-card p { margin-bottom:8px; font-weight:600; }
+    .related-card .order-btn { padding:8px 12px; border-radius:10px; font-size:.95rem; }
+
+    /* ---------- BOTTOM MINI-CART BAR (hidden when empty) ---------- */
+    .mini-bar { position:fixed; left:0; right:0; bottom:18px; display:flex; justify-content:center; pointer-events:none; z-index:1200; }
+    .mini-bar .inner {
+      pointer-events:all; width:min(980px,calc(100% - 40px)); background:#111; color:#fff; border-radius:14px; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 12px 30px rgba(0,0,0,0.25);
+      transform:translateY(14px); transition:transform .28s ease, opacity .28s ease;
+    }
+    .mini-bar.hidden .inner { opacity:0; transform:translateY(18px); pointer-events:none; }
+    .mini-left { display:flex; gap:12px; align-items:center; }
+    .mini-left .count { background:#fff; color:#111; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+    .mini-right { display:flex; gap:12px; align-items:center; }
+    .mini-cta { background:#0a84ff; color:#fff; padding:10px 14px; border-radius:10px; border:none; font-weight:700; cursor:pointer; }
+
+    /* ---------- CHECKOUT PANEL (slide-up) ---------- */
+    .checkout-panel { position:fixed; left:0; right:0; bottom:0; height:0; overflow:hidden; background:#fff; box-shadow:0 -12px 30px rgba(0,0,0,0.15); transition:height .28s ease; z-index:1300; }
+    .checkout-panel.open { height:60vh; }
+    .checkout-inner { max-width:980px; margin:0 auto; padding:22px; height:100%; display:flex; flex-direction:column; gap:12px; }
+    .checkout-header { display:flex; justify-content:space-between; align-items:center; }
+    .checkout-list { overflow:auto; flex:1; margin-top:6px; padding-right:6px; }
+    .checkout-item { display:flex; justify-content:space-between; gap:14px; padding:10px 0; border-bottom:1px dashed #eee; align-items:center; }
+    .qty-controls button { padding:6px 8px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer; }
+    .place-order { background:#0071e3; color:#fff; padding:12px 16px; border-radius:10px; border:none; font-weight:700; cursor:pointer; }
+
+    /* ---------- UTIL ---------- */
+    .hidden { display:none !important; }
+    .muted { color:#666; font-size:.95rem; }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width:920px) {
+      .product-area { flex-direction:column; }
+      .product-left, .product-right { width:100%; }
+      .carousel img { height:300px; }
+      .mini-bar .inner { padding:12px; }
+    }
+    @media (max-width:480px) {
+      .hero h1 { font-size:1.8rem; } .hero p { font-size:.95rem; }
+      .carousel img { height:220px; }
+      .related-grid { gap:12px; }
+      .mini-left .count { width:30px; height:30px; font-size:.95rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <header class="hero" style="background-image:url('images/banner.jpg')">
+    <div class="container">
+      <h1>Welcome to Coffee Demo</h1>
+      <p>Freshly brewed coffee & artisan pastries — order online</p>
+    </div>
+  </header>
+
+  <!-- PRODUCT CENTERED AREA -->
+  <main class="container">
+    <section class="product-area">
+      <div class="product-left">
+        <div class="carousel" aria-hidden="false">
+          <img src="images/latte.jpg" alt="Latte" class="zoom carousel-image">
+          <img src="images/cappuccino.jpg" alt="Cappuccino" class="carousel-image">
+          <img src="images/mocha.jpg" alt="Mocha" class="carousel-image">
+          <button class="arrow left" aria-label="Previous">‹</button>
+          <button class="arrow right" aria-label="Next">›</button>
+        </div>
+        <div class="dots" aria-hidden="true"></div>
+      </div>
+
+      <aside class="product-right">
+        <div class="product-title">Signature Latte</div>
+        <div class="product-desc muted">Rich, creamy latte made with our house blend beans.</div>
+
+        <div style="height:14px"></div>
+
+        <div class="variant-group">
+          <button class="variant-btn" data-price="12" data-value="small">Small</button>
+          <button class="variant-btn active" data-price="15" data-value="medium">Medium</button>
+          <button class="variant-btn" data-price="18" data-value="large">Large</button>
+        </div>
+
+        <div class="price-row">RM <span id="price">15.00</span></div>
+
+        <div style="height:12px"></div>
+        <button id="add-to-cart" class="order-btn" aria-label="Add to order">Add to Order</button>
+
+      </aside>
+    </section>
+
+    <!-- RELATED -->
+    <section class="related">
+      <h3>Customers also buy</h3>
+      <div class="related-grid">
+        <div class="related-card">
+          <img src="images/croissant.jpg" alt="Croissant">
+          <p>Croissant</p>
+          <button class="order-btn add-related" data-name="Croissant" data-price="6">Add</button>
+        </div>
+        <div class="related-card">
+          <img src="images/muffin.jpg" alt="Muffin">
+          <p>Blueberry Muffin</p>
+          <button class="order-btn add-related" data-name="Blueberry Muffin" data-price="8">Add</button>
+        </div>
+        <div class="related-card">
+          <img src="images/espresso.jpg" alt="Espresso">
+          <p>Espresso Shot</p>
+          <button class="order-btn add-related" data-name="Espresso Shot" data-price="4.5">Add</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MINI CART BOTTOM BAR (hidden when empty) -->
+  <div class="mini-bar hidden" id="mini-bar">
+    <div class="inner container">
+      <div class="mini-left">
+        <div class="count" id="cart-count">0</div>
+        <div>
+          <div style="font-weight:700">Your Order</div>
+          <div class="muted" id="mini-desc">Items in your cart</div>
+        </div>
+      </div>
+      <div class="mini-right">
+        <div style="font-weight:700">RM <span id="mini-total">0.00</span></div>
+        <button class="mini-cta" id="open-checkout">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKOUT PANEL -->
+  <div class="checkout-panel" id="checkout-panel" aria-hidden="true">
+    <div class="checkout-inner container">
+      <div class="checkout-header">
+        <div style="font-weight:700">Your Order</div>
+        <div>
+          <button id="close-checkout" aria-label="Close checkout">Close</button>
+        </div>
+      </div>
+
+      <div class="checkout-list" id="checkout-list">
+        <!-- items inserted here -->
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px">
+        <div class="muted">Subtotal</div>
+        <div style="font-weight:800">RM <span id="checkout-total">0.00</span></div>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:10px">
+        <button class="place-order" id="place-order">Place Order</button>
+        <button id="close-checkout-2">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- JS (variant, carousel, cart) ---------- -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      /* ---------- Carousel ---------- */
+      const carouselImgs = Array.from(document.querySelectorAll('.carousel-image'));
+      const left = document.querySelector('.arrow.left');
+      const right = document.querySelector('.arrow.right');
+      const dotsWrap = document.querySelector('.dots');
+      let activeIndex = 0;
+      function buildDots(){
+        dotsWrap.innerHTML = '';
+        carouselImgs.forEach((_,i)=>{
+          const d = document.createElement('div');
+          d.className = 'dot' + (i===0 ? ' active' : '');
+          d.dataset.i = i;
+          d.addEventListener('click', ()=> showSlide(i));
+          dotsWrap.appendChild(d);
+        });
+      }
+      function showSlide(i){
+        carouselImgs.forEach((img,idx)=> img.classList.toggle('active', idx===i));
+        document.querySelectorAll('.dot').forEach((dot,idx)=> dot.classList.toggle('active', idx===i));
+        activeIndex = i;
+      }
+      left.addEventListener('click', ()=> showSlide((activeIndex-1+carouselImgs.length)%carouselImgs.length));
+      right.addEventListener('click', ()=> showSlide((activeIndex+1)%carouselImgs.length));
+      buildDots();
+
+      /* ---------- Variant buttons & price ---------- */
+      const variantBtns = Array.from(document.querySelectorAll('.variant-btn'));
+      const priceSpan = document.getElementById('price');
+      let selectedPrice = parseFloat(document.querySelector('.variant-btn.active').dataset.price || '0');
+
+      function setActiveVariant(btn){
+        variantBtns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedPrice = parseFloat(btn.dataset.price || '0');
+        priceSpan.textContent = selectedPrice.toFixed(2);
+      }
+      variantBtns.forEach(btn=>{
+        // set data-price from attribute
+        btn.addEventListener('click', ()=> setActiveVariant(btn) );
+      });
+      // initialize price UI
+      priceSpan.textContent = selectedPrice.toFixed(2);
+
+      /* ---------- Cart state ---------- */
+      let cart = []; // { name, price, qty }
+
+      const miniBar = document.getElementById('mini-bar');
+      const cartCountEl = document.getElementById('cart-count');
+      const miniTotalEl = document.getElementById('mini-total');
+      const openCheckoutBtn = document.getElementById('open-checkout');
+      const checkoutPanel = document.getElementById('checkout-panel');
+      const checkoutList = document.getElementById('checkout-list');
+      const checkoutTotalEl = document.getElementById('checkout-total');
+      const closeCheckout = document.getElementById('close-checkout');
+      const closeCheckout2 = document.getElementById('close-checkout-2');
+      const placeOrderBtn = document.getElementById('place-order');
+
+      function renderMiniBar(){
+        const count = cart.reduce((s,i)=> s + i.qty, 0);
+        const total = cart.reduce((s,i)=> s + i.price * i.qty, 0);
+        cartCountEl.textContent = count;
+        miniTotalEl.textContent = total.toFixed(2);
+        if(count>0){
+          miniBar.classList.remove('hidden');
+        } else {
+          miniBar.classList.add('hidden');
+        }
+      }
+
+      function renderCheckout(){
+        checkoutList.innerHTML = '';
+        let total = 0;
+        cart.forEach((it, idx) => {
+          const row = document.createElement('div');
+          row.className = 'checkout-item';
+          row.innerHTML = `
+            <div>
+              <div style="font-weight:600">${escapeHtml(it.name)}</div>
+              <div class="muted">RM ${it.price.toFixed(2)}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px">
+              <div class="qty-controls">
+                <button data-idx="${idx}" class="qty-decrease">−</button>
+                <span style="margin:0 8px">${it.qty}</span>
+                <button data-idx="${idx}" class="qty-increase">+</button>
+              </div>
+              <div style="width:90px; text-align:right">RM ${(it.price*it.qty).toFixed(2)}</div>
+              <button data-idx="${idx}" class="remove-item" style="margin-left:8px">Remove</button>
+            </div>
+          `;
+          checkoutList.appendChild(row);
+          total += it.price * it.qty;
+        });
+        checkoutTotalEl.textContent = total.toFixed(2);
+
+        // attach handlers:
+        checkoutList.querySelectorAll('.qty-increase').forEach(btn => {
+          btn.addEventListener('click', ()=> {
+            const i = parseInt(btn.dataset.idx); cart[i].qty++; updateAll();
+          });
+        });
+        checkoutList.querySelectorAll('.qty-decrease').forEach(btn => {
+          btn.addEventListener('click', ()=> {
+            const i = parseInt(btn.dataset.idx); cart[i].qty = Math.max(1, cart[i].qty - 1); updateAll();
+          });
+        });
+        checkoutList.querySelectorAll('.remove-item').forEach(btn => {
+          btn.addEventListener('click', ()=> {
+            const i = parseInt(btn.dataset.idx); cart.splice(i,1); updateAll();
+          });
+        });
+      }
+
+      function updateAll(){
+        renderMiniBar();
+        renderCheckout();
+      }
+
+      function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      /* ---------- Add to cart (main product) ---------- */
+      document.getElementById('add-to-cart').addEventListener('click', ()=> {
+        const name = 'Signature Latte';
+        const price = selectedPrice || 0;
+        const existing = cart.find(it => it.name === name);
+        if(existing) existing.qty++;
+        else cart.push({ name, price: parseFloat(price), qty: 1 });
+        updateAll();
+      });
+
+      /* ---------- Add related items ---------- */
+      document.querySelectorAll('.add-related').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const name = btn.dataset.name || 'Item';
+          const price = parseFloat(btn.dataset.price) || 0;
+          const existing = cart.find(it => it.name === name);
+          if(existing) existing.qty++;
+          else cart.push({ name, price: parseFloat(price), qty: 1 });
+          updateAll();
+        });
+      });
+
+      /* ---------- Mini bar: open checkout ---------- */
+      openCheckoutBtn.addEventListener('click', ()=> {
+        checkoutPanel.classList.add('open');
+      });
+      closeCheckout.addEventListener('click', ()=> checkoutPanel.classList.remove('open'));
+      closeCheckout2.addEventListener('click', ()=> checkoutPanel.classList.remove('open'));
+
+      /* ---------- Place order (placeholder) ---------- */
+      placeOrderBtn.addEventListener('click', ()=> {
+        alert('Place Order pressed — integration to payment/checkout goes here.');
+      });
+
+      // init render
+      updateAll();
+    }); // DOMContentLoaded
+  </script>
+</body>
+</html>

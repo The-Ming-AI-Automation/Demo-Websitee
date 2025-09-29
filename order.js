@@ -1,4 +1,3 @@
-```javascript
 document.addEventListener("DOMContentLoaded", () => {
   // ===============================
   // Carousel
@@ -11,30 +10,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateCarousel(index) {
     images.forEach((img, i) => img.classList.toggle("active", i === index));
-    document.querySelectorAll(".dot").forEach((dot, i) =>
-      dot.classList.toggle("active", i === index)
-    );
+    document.querySelectorAll(".dot").forEach((dot, i) => {
+      dot.classList.toggle("active", i === index);
+    });
     currentIndex = index;
   }
 
-  // Create dots dynamically
-  images.forEach((_, i) => {
-    const dot = document.createElement("span");
-    dot.classList.add("dot");
-    if (i === 0) dot.classList.add("active");
-    dot.addEventListener("click", () => updateCarousel(i));
-    dotsContainer.appendChild(dot);
-  });
+  if (images.length && leftArrow && rightArrow && dotsContainer) {
+    // Create dots dynamically
+    images.forEach((_, i) => {
+      const dot = document.createElement("span");
+      dot.classList.add("dot");
+      if (i === 0) dot.classList.add("active");
+      dot.addEventListener("click", () => updateCarousel(i));
+      dotsContainer.appendChild(dot);
+    });
 
-  leftArrow.addEventListener("click", () => {
-    let newIndex = (currentIndex - 1 + images.length) % images.length;
-    updateCarousel(newIndex);
-  });
+    leftArrow.addEventListener("click", () => {
+      let newIndex = (currentIndex - 1 + images.length) % images.length;
+      updateCarousel(newIndex);
+    });
 
-  rightArrow.addEventListener("click", () => {
-    let newIndex = (currentIndex + 1) % images.length;
-    updateCarousel(newIndex);
-  });
+    rightArrow.addEventListener("click", () => {
+      let newIndex = (currentIndex + 1) % images.length;
+      updateCarousel(newIndex);
+    });
+  }
 
   // ===============================
   // Variants
@@ -48,7 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
         group.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
         e.target.classList.add("active");
         selectedPrice = parseFloat(e.target.dataset.price);
-        document.querySelector(".price").textContent = `RM ${selectedPrice}`;
+        const priceEl = document.querySelector(".price");
+        if (priceEl) priceEl.textContent = `RM ${selectedPrice}`;
       }
     });
   });
@@ -63,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let cart = [];
 
   function updateCart() {
+    if (!cartItemsEl || !cartTotalEl) return;
     cartItemsEl.innerHTML = "";
     let total = 0;
 
@@ -93,39 +96,42 @@ document.addEventListener("DOMContentLoaded", () => {
       cart.push({ name, price, qty: 1 });
     }
     updateCart();
-    miniCart.classList.remove("hidden"); // auto open when item added
+    if (miniCart) miniCart.classList.remove("hidden"); // auto open when item added
   }
 
-  // Main product add button
-  document.getElementById("add-to-cart").addEventListener("click", () => {
-    addToCart("Signature Latte", selectedPrice);
-  });
+  const mainAddBtn = document.getElementById("add-to-cart");
+  if (mainAddBtn) {
+    mainAddBtn.addEventListener("click", () => {
+      addToCart("Signature Latte", selectedPrice);
+    });
+  }
 
-  // Related product buttons
   document.querySelectorAll(".add-related").forEach(btn => {
     btn.addEventListener("click", () => {
       addToCart(btn.dataset.name, parseFloat(btn.dataset.price));
     });
   });
 
-  // Cart item controls
-  cartItemsEl.addEventListener("click", e => {
-    if (e.target.tagName === "BUTTON") {
-      const index = e.target.dataset.index;
-      if (e.target.classList.contains("increase")) {
-        cart[index].qty++;
-      } else if (e.target.classList.contains("decrease")) {
-        cart[index].qty = Math.max(1, cart[index].qty - 1);
-      } else if (e.target.classList.contains("remove")) {
-        cart.splice(index, 1);
+  if (cartItemsEl) {
+    cartItemsEl.addEventListener("click", e => {
+      if (e.target.tagName === "BUTTON") {
+        const index = e.target.dataset.index;
+        if (!cart[index]) return;
+        if (e.target.classList.contains("increase")) {
+          cart[index].qty++;
+        } else if (e.target.classList.contains("decrease")) {
+          cart[index].qty = Math.max(1, cart[index].qty - 1);
+        } else if (e.target.classList.contains("remove")) {
+          cart.splice(index, 1);
+        }
+        updateCart();
       }
-      updateCart();
-    }
-  });
+    });
+  }
 
-  // Cart toggle
-  cartToggle.addEventListener("click", () => {
-    miniCart.classList.toggle("hidden");
-  });
+  if (cartToggle && miniCart) {
+    cartToggle.addEventListener("click", () => {
+      miniCart.classList.toggle("hidden");
+    });
+  }
 });
-```

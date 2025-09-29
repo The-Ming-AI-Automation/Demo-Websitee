@@ -55,7 +55,6 @@
       pointer-events:all; width:min(980px,calc(100% - 40px)); background:#111; color:#fff; border-radius:14px; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 12px 30px rgba(0,0,0,0.25);
       transform:translateY(14px); transition:transform .28s ease, opacity .28s ease;
     }
-    .mini-bar.hidden .inner { opacity:0; transform:translateY(18px); pointer-events:none; }
     .mini-left { display:flex; gap:12px; align-items:center; }
     .mini-left .count { background:#fff; color:#111; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:700; }
     .mini-right { display:flex; gap:12px; align-items:center; }
@@ -97,12 +96,12 @@
     </div>
   </header>
 
-  <!-- PRODUCT CENTERED AREA -->
+  <!-- PRODUCT AREA -->
   <main class="container">
     <section class="product-area">
       <div class="product-left">
         <div class="carousel" aria-hidden="false">
-          <img src="latte.jpg" alt="Latte" class="zoom carousel-image">
+          <img src="latte.jpg" alt="Latte" class="carousel-image zoom active">
           <img src="cappuccino.jpg" alt="Cappuccino" class="carousel-image">
           <img src="mocha.jpg" alt="Mocha" class="carousel-image">
           <button class="arrow left" aria-label="Previous">‹</button>
@@ -115,8 +114,6 @@
         <div class="product-title">Signature Latte</div>
         <div class="product-desc muted">Rich, creamy latte made with our house blend beans.</div>
 
-        <div style="height:14px"></div>
-
         <div class="variant-group">
           <button class="variant-btn" data-price="12" data-value="small">Small</button>
           <button class="variant-btn active" data-price="15" data-value="medium">Medium</button>
@@ -125,13 +122,11 @@
 
         <div class="price-row">RM <span id="price">15.00</span></div>
 
-        <div style="height:12px"></div>
-        <button id="add-to-cart" class="order-btn" aria-label="Add to order">Add to Order</button>
-
+        <button id="add-to-cart" class="order-btn">Add to Order</button>
       </aside>
     </section>
 
-    <!-- RELATED -->
+    <!-- RELATED PRODUCTS -->
     <section class="related">
       <h3>Customers also buy</h3>
       <div class="related-grid">
@@ -146,7 +141,7 @@
           <button class="order-btn add-related" data-name="Blueberry Muffin" data-price="8">Add</button>
         </div>
         <div class="related-card">
-          <img src="espresso.jpg" alt="Espresso">
+          <img src="espresso.jpg" alt="Espresso Shot">
           <p>Espresso Shot</p>
           <button class="order-btn add-related" data-name="Espresso Shot" data-price="4.5">Add</button>
         </div>
@@ -154,7 +149,7 @@
     </section>
   </main>
 
-  <!-- MINI CART BOTTOM BAR (hidden when empty) -->
+  <!-- MINI CART -->
   <div class="mini-bar hidden" id="mini-bar">
     <div class="inner container">
       <div class="mini-left">
@@ -172,159 +167,15 @@
   </div>
 
   <!-- CHECKOUT PANEL -->
-  <div class="checkout-panel" id="checkout-panel" aria-hidden="true">
+  <div class="checkout-panel" id="checkout-panel">
     <div class="checkout-inner container">
       <div class="checkout-header">
         <div style="font-weight:700">Your Order</div>
         <div>
-          <button id="close-checkout" aria-label="Close checkout">Close</button>
+          <button id="close-checkout">Close</button>
         </div>
       </div>
 
       <div class="checkout-list" id="checkout-list"></div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px">
-        <div class="muted">Subtotal</div>
-        <div style="font-weight:800">RM <span id="checkout-total">0.00</span></div>
-      </div>
-
-      <div style="display:flex; gap:12px; margin-top:10px">
-        <button class="place-order" id="place-order">Place Order</button>
-        <button id="close-checkout-2">Continue Shopping</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const carouselImgs = Array.from(document.querySelectorAll('.carousel-image'));
-      const left = document.querySelector('.arrow.left');
-      const right = document.querySelector('.arrow.right');
-      const dotsWrap = document.querySelector('.dots');
-      let activeIndex = 0;
-
-      function buildDots(){
-        dotsWrap.innerHTML = '';
-        carouselImgs.forEach((_,i)=>{
-          const d = document.createElement('div');
-          d.className = 'dot' + (i===0 ? ' active' : '');
-          d.dataset.i = i;
-          d.addEventListener('click', ()=> showSlide(i));
-          dotsWrap.appendChild(d);
-        });
-      }
-      function showSlide(i){
-        carouselImgs.forEach((img,idx)=> img.classList.toggle('active', idx===i));
-        document.querySelectorAll('.dot').forEach((dot,idx)=> dot.classList.toggle('active', idx===i));
-        activeIndex = i;
-      }
-      left.addEventListener('click', ()=> showSlide((activeIndex-1+carouselImgs.length)%carouselImgs.length));
-      right.addEventListener('click', ()=> showSlide((activeIndex+1)%carouselImgs.length));
-      buildDots();
-
-      const variantBtns = Array.from(document.querySelectorAll('.variant-btn'));
-      const priceSpan = document.getElementById('price');
-      let selectedPrice = parseFloat(document.querySelector('.variant-btn.active').dataset.price || '0');
-
-      function setActiveVariant(btn){
-        variantBtns.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedPrice = parseFloat(btn.dataset.price || '0');
-        priceSpan.textContent = selectedPrice.toFixed(2);
-      }
-      variantBtns.forEach(btn=>{
-        btn.addEventListener('click', ()=> setActiveVariant(btn) );
-      });
-      priceSpan.textContent = selectedPrice.toFixed(2);
-
-      let cart = [];
-      const miniBar = document.getElementById('mini-bar');
-      const cartCountEl = document.getElementById('cart-count');
-      const miniTotalEl = document.getElementById('mini-total');
-      const openCheckoutBtn = document.getElementById('open-checkout');
-      const checkoutPanel = document.getElementById('checkout-panel');
-      const checkoutList = document.getElementById('checkout-list');
-      const checkoutTotalEl = document.getElementById('checkout-total');
-      const closeCheckout = document.getElementById('close-checkout');
-      const closeCheckout2 = document.getElementById('close-checkout-2');
-      const placeOrderBtn = document.getElementById('place-order');
-
-      function renderMiniBar(){
-        const count = cart.reduce((s,i)=> s + i.qty, 0);
-        const total = cart.reduce((s,i)=> s + i.price * i.qty, 0);
-        cartCountEl.textContent = count;
-        miniTotalEl.textContent = total.toFixed(2);
-        miniBar.classList.toggle('hidden', count === 0);
-      }
-
-      function renderCheckout(){
-        checkoutList.innerHTML = '';
-        let total = 0;
-        cart.forEach((it, idx) => {
-          const row = document.createElement('div');
-          row.className = 'checkout-item';
-          row.innerHTML = `
-            <div>
-              <div style="font-weight:600">${escapeHtml(it.name)}</div>
-              <div class="muted">RM ${it.price.toFixed(2)}</div>
-            </div>
-            <div style="display:flex; align-items:center; gap:12px">
-              <div class="qty-controls">
-                <button data-idx="${idx}" class="qty-decrease">−</button>
-                <span style="margin:0 8px">${it.qty}</span>
-                <button data-idx="${idx}" class="qty-increase">+</button>
-              </div>
-              <div style="width:90px; text-align:right">RM ${(it.price*it.qty).toFixed(2)}</div>
-              <button data-idx="${idx}" class="remove-item" style="margin-left:8px">Remove</button>
-            </div>
-          `;
-          checkoutList.appendChild(row);
-          total += it.price * it.qty;
-        });
-        checkoutTotalEl.textContent = total.toFixed(2);
-
-        checkoutList.querySelectorAll('.qty-increase').forEach(btn => {
-          btn.addEventListener('click', ()=> { const i=parseInt(btn.dataset.idx); cart[i].qty++; updateAll(); });
-        });
-        checkoutList.querySelectorAll('.qty-decrease').forEach(btn => {
-          btn.addEventListener('click', ()=> { const i=parseInt(btn.dataset.idx); cart[i].qty=Math.max(1,cart[i].qty-1); updateAll(); });
-        });
-        checkoutList.querySelectorAll('.remove-item').forEach(btn => {
-          btn.addEventListener('click', ()=> { const i=parseInt(btn.dataset.idx); cart.splice(i,1); updateAll(); });
-        });
-      }
-
-      function updateAll(){ renderMiniBar(); renderCheckout(); }
-      function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-      document.getElementById('add-to-cart').addEventListener('click', ()=> {
-        const name='Signature Latte'; const price=selectedPrice||0;
-        const existing=cart.find(it=>it.name===name);
-        if(existing) existing.qty++; else cart.push({name,price:parseFloat(price),qty:1});
-        updateAll();
-      });
-
-      document.querySelectorAll('.add-related').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const name=btn.dataset.name||'Item';
-          const price=parseFloat(btn.dataset.price)||0;
-          const existing=cart.find(it=>it.name===name);
-          if(existing) existing.qty++; else cart.push({name,price:parseFloat(price),qty:1});
-          updateAll();
-        });
-      });
-
-      openCheckoutBtn.addEventListener('click', ()=> checkoutPanel.classList.add('open'));
-      closeCheckout.addEventListener('click', ()=> checkoutPanel.classList.remove('open'));
-      closeCheckout2.addEventListener('click', ()=> checkoutPanel.classList.remove('open'));
-      placeOrderBtn.addEventListener('click', ()=> alert('Place Order pressed — integration to payment/checkout goes here.'));
-
-      updateAll();
-    });
-  </script>
-
-  <!-- ---------- TIDIO CHAT WIDGET ---------- -->
-  <script src="https://code.tidio.co/YOUR_TIDIO_KEY_HERE.js" async></script>
-
-</body>
-</html>
+      <div style="display:flex; justify-content
